@@ -26,14 +26,27 @@ import intelhex
 # app from starting. sounddevice ships prebuilt wheels (PortAudio bundled on
 # Windows/macOS, system libportaudio2 on Linux); audio_error records why it
 # is unavailable so we can surface it once the GUI is up.
+
+audio_error = ""
+have_audio = True
 try:
     import numpy as np
-    import sounddevice as sd
-    have_audio = True
-    audio_error = None
+    # have_audio implies that it has something to do with audio, it doesn't:
+    # it is like a dep flag, and audio just put under audio
 except Exception as e:
     have_audio = False
-    audio_error = str(e)
+    audio_error += "there was an issue importing numpy: " + str(e) + "\n"
+
+try:
+    import sounddevice as sd
+    have_audio = (True and have_audio) # the have audio flag if for both sound and numpy
+except Exception as e:
+    have_audio = False
+    audio_error += """You need to install:
+- libportaudio2 on Linux (e.g "sudo apt install libportaudio2")
+- PortAudio bundled on Mac and Windows
+""" + str(e)
+
 import platform
 import tempfile
 
